@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.FTPMovie" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>
