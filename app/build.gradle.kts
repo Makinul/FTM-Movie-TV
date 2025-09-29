@@ -55,6 +55,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
+    implementation(libs.androidx.navigation.compose)
+
     // Apache server connector
     implementation(libs.commons.net)
 
