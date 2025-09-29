@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
@@ -21,8 +20,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 
-// Data class for a file or directory item
-enum class FileType { DIRECTORY, VIDEO }
+// Represents a file or folder on the server
+enum class FileType { DIRECTORY, VIDEO, OTHER }
 data class FileItem(val name: String, val type: FileType, val path: String)
 
 @OptIn(ExperimentalTvMaterial3Api::class)

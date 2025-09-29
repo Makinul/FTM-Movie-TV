@@ -55,6 +55,14 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
+    // Apache server connector
+    implementation(libs.commons.net)
+
+    // For making HTTP requests to your server
+    implementation(libs.okhttp)
+    // For parsing the HTML directory listing
+    implementation(libs.jsoup)
+
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
 }
