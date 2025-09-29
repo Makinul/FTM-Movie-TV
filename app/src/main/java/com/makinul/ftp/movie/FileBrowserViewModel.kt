@@ -6,28 +6,28 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class FileBrowserViewModel(serverIp: String) : ViewModel() {
+class FileBrowserViewModel(initialUrl: String) : ViewModel() {
 
-    private val ftpClient = FtpClient(serverIp)
+    private val httpParser = HttpDirectoryParser()
 
     // Holds the list of files for the UI to observe
     private val _fileList = MutableStateFlow<List<FileItem>>(emptyList())
     val fileList: StateFlow<List<FileItem>> = _fileList
 
     // Holds the current directory path
-    private val _currentPath = MutableStateFlow("/")
+    private val _currentPath = MutableStateFlow(initialUrl)
     val currentPath: StateFlow<String> = _currentPath
 
     init {
         // Load the root directory when the ViewModel is created
-        loadDirectory("/")
+        loadDirectory(initialUrl)
     }
 
     fun loadDirectory(path: String) {
         viewModelScope.launch {
             _currentPath.value = path
             // THE CALL TO YOUR FTP CLIENT HAPPENS HERE:
-            _fileList.value = ftpClient.listFiles(path)
+            _fileList.value = httpParser.parseUrl(path)
         }
     }
 

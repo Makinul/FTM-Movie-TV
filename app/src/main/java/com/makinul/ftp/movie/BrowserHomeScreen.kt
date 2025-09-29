@@ -1,6 +1,16 @@
 package com.makinul.ftp.movie
 
+import android.os.Bundle
 import android.util.Log
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,13 +26,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.Button
 import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
@@ -32,28 +56,76 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 
 // A data class to hold speed dial item information
-data class SpeedDialItem(val name: String, val iconResId: Int)
+data class SpeedDialItem(val name: String, val iconResId: Int, val url: String? = null)
 
 @Preview
 @Composable
 fun BrowserHomeScreenPreview() {
-    BrowserHomeScreen()
+    BrowserScreenStructure()
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun BrowserHomeScreen() {
-    // Sample data for our speed dial
-    val speedDialItems = listOf(
-        SpeedDialItem("YouTube", R.drawable.ic_youtube),
-        SpeedDialItem("Google News", R.drawable.ic_google_news),
-        SpeedDialItem("GitHub", R.drawable.ic_youtube),
-        SpeedDialItem("Stack Overflow", R.drawable.ic_google_news),
-        SpeedDialItem("Wikipedia", R.drawable.ic_youtube),
-        SpeedDialItem("Reddit", R.drawable.ic_google_news),
-        SpeedDialItem("FTP", R.drawable.ic_add),
+fun BrowserScreenStructure() {
+    val navController = rememberNavController() // Get NavController
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val items = listOf(
+        SpeedDialItem("Home", R.drawable.ic_home),
+        SpeedDialItem("Browser", R.drawable.ic_browser),
+        SpeedDialItem("Ftp", R.drawable.ic_ftp)
     )
 
+    // Determine the current title based on the route
+    val currentTitle = items.find {
+        it.name == currentRoute
+    }?.name ?: stringResource(R.string.app_name)
+
+    val currentUrl = items.find {
+        it.url == currentRoute
+    }?.url ?: "https://www.youtube.com/"
+
+    // Use a dark Surface as the base for the TV UI
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 48.dp, vertical = 32.dp)
+        ) {
+            NavHost(
+                navController = navController, startDestination = "Home",
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None }
+            ) {
+                composable("Home") { BrowserHomeScreen(navController) }
+                composable("Ftp") {
+                    ServerListScreen { ftpServer ->
+                        navController.navigate("Browser")
+                    }
+                }
+                composable("Browser") {
+                    WebBrowseScreen(currentUrl)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun BrowserHomeScreen(navController: NavHostController) {
+    // Sample data for our speed dial
+    val speedDialItems = listOf(
+        SpeedDialItem("YouTube", R.drawable.ic_youtube, "https://www.youtube.com/"),
+        SpeedDialItem("Google News", R.drawable.ic_google_news, "https://news.google.com/"),
+        SpeedDialItem("GitHub", R.drawable.ic_youtube, "https://github.com/"),
+        SpeedDialItem("Stack Overflow", R.drawable.ic_google_news, "https://stackoverflow.com/"),
+        SpeedDialItem("Wikipedia", R.drawable.ic_youtube, "https://www.wikipedia.org/"),
+        SpeedDialItem("Reddit", R.drawable.ic_google_news, "https://www.reddit.com/")
+    )
     // Use a dark Surface as the base for the TV UI
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -65,14 +137,14 @@ fun BrowserHomeScreen() {
         ) {
             // 1. Top Bar for Search and Actions
             BrowserTopBar(
-                onSearchClick = { Log.v(TAG, "onSearchClick") },
+                onSearchClick = { navController.navigate("Ftp") },
                 onBookmarksClick = { Log.v(TAG, "onBookmarksClick") }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // 2. Speed Dial Grid
-            SpeedDialGrid(items = speedDialItems)
+            SpeedDialGrid(navController, items = speedDialItems)
         }
     }
 }
@@ -119,7 +191,11 @@ fun BrowserTopBar(
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun SpeedDialGrid(items: List<SpeedDialItem>, modifier: Modifier = Modifier) {
+fun SpeedDialGrid(
+    navController: NavHostController,
+    items: List<SpeedDialItem>,
+    modifier: Modifier = Modifier
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(5), // Adjust column count as needed
         modifier = modifier.fillMaxSize(),
@@ -130,6 +206,7 @@ fun SpeedDialGrid(items: List<SpeedDialItem>, modifier: Modifier = Modifier) {
         items(items) { item ->
             SpeedDialCard(item = item, onClick = {
                 Log.v(TAG, "Clicked on ${item.name}")
+                navController.navigate("Browser")
             })
         }
     }
