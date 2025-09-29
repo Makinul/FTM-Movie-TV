@@ -7,9 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,26 +26,12 @@ data class FileItem(val name: String, val type: FileType, val path: String)
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun FileBrowserScreen(
-    currentPath: String,
-    onFileSelected: (FileItem) -> Unit, // To play video
-    onDirectorySelected: (FileItem) -> Unit, // To navigate deeper
-    onNavigateUp: () -> Unit
+    viewModel: FileBrowserViewModel,
+    onFileSelected: (FileItem) -> Unit
 ) {
-// This list would be fetched from your FTP client based on the `currentPath`
-    val files by remember(currentPath) {
-        mutableStateOf(
-            listOf(
-                FileItem("Movies", FileType.DIRECTORY, "/Movies"),
-                FileItem("TV Shows", FileType.DIRECTORY, "/TV Shows"),
-                FileItem("My Awesome Movie.mkv", FileType.VIDEO, "/My Awesome Movie.mkv"),
-                FileItem(
-                    "Another.Great.Film.S01E01.mp4",
-                    FileType.VIDEO,
-                    "/Another.Great.Film.S01E01.mp4"
-                )
-            )
-        )
-    }
+    // Collect the state from the ViewModel
+    val files by viewModel.fileList.collectAsState()
+    val currentPath by viewModel.currentPath.collectAsState()
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -67,7 +52,7 @@ fun FileBrowserScreen(
                     item {
                         ListItem(
                             selected = false,
-                            onClick = onNavigateUp,
+                            onClick = { viewModel.navigateUp() },
                             headlineContent = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_folder_up),
@@ -84,7 +69,7 @@ fun FileBrowserScreen(
                         selected = true,
                         onClick = {
                             if (file.type == FileType.DIRECTORY) {
-                                onDirectorySelected(file)
+                                viewModel.loadDirectory(file.path)
                             } else {
                                 onFileSelected(file)
                             }
