@@ -24,8 +24,8 @@ fun ServerListScreen(
     val servers by remember {
         mutableStateOf(
             listOf(
-                FtpServer("My NAS", "192.168.1.100"),
-                FtpServer("Living Room PC", "192.168.1.152")
+                FtpServer("Local FTp", "http://172.16.50.4/"),
+                FtpServer("Live TV", "https://imotv.net/")
             )
         )
     }
