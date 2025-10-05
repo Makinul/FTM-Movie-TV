@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.net.ftp.FTPClient
 
-class FtpClient(private val serverIp: String) {
+class FtpClient (private val serverIp: String) {
 
     // You would manage credentials and connection state here
     private val ftp = FTPClient()
